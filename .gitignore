@@ -1,0 +1,8 @@
+target/
+node_modules/
+dist/
+.superpowers/
+app/src-tauri/gen/
+app/public/preview-data/
+
+node_modules

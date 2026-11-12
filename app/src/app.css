@@ -1,0 +1,159 @@
+/* Braun palette: warm housing white and grey, near-black ink, and one signal orange (the
+   ET 66's "=" key) kept for the action that does the job, the current selection and focus.
+   Status is shown with small indicator lamps; everything else stays neutral. */
+:root {
+  --plastic: #eeece7;          /* the app's ground */
+  --panel: #f9f8f5;            /* cards, the drawer */
+  --panel-2: #e5e2db;          /* the sidebar, hovered keys, quiet fills */
+  --seam: #d0ccc3;
+  --key-edge: #c2bdb3;         /* the lower edge that makes a button read as a key: a step darker than --seam */
+  --ink: #1c1c1a;
+  --ink-soft: #4b4944;
+  --ink-faint: #65635c;
+  --accent: #c64c17;           /* signal orange */
+  --accent-text: #aa4113;      /* the same orange where it is text: 4.5:1 on every ground */
+  --accent-ink: #ffffff;
+  --signal: #c99500;           /* your marks: favourites, scores */
+  --ok: #28713f;   --bad: #b23929;   --warn: #815d00;   --info: #3b5a70;
+  --ok-bg: #2c7a4416; --bad-bg: #b43a2a16; --warn-bg: #c9950020; --info-bg: #3b5a7014;
+  --maker-nintendo: #b8443a; --maker-sony: #3d5f86; --maker-sega: #2f7aa6; --maker-atari: #c46a2a;
+  --maker-snk: #b08d2c; --maker-nec: #7a776f; --maker-other: #55534d;
+  --row: 30px;
+  --radius-s: 4px; --radius-m: 6px;
+  --shadow-pop: 0 12px 28px #1c1c1a26, 0 2px 6px #1c1c1a1a;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+/* Dark: when chosen in Settings, or when following a dark system (the default). */
+:root[data-theme="dark"] {
+    --plastic: #191918; --panel: #222221; --panel-2: #2b2b29; --seam: #393835; --key-edge: #2e2d2a;
+    --ink: #edebe4; --ink-soft: #b7b4ab; --ink-faint: #929087;
+    --accent: #ee6b2c; --accent-text: #ee6b2c; --accent-ink: #191918; --signal: #e5b33a;
+    --ok: #5fb376; --bad: #e46b57; --warn: #ddb24a; --info: #93acbf;
+    --ok-bg: #5fb37620; --bad-bg: #e46b5720; --warn-bg: #ddb24a20; --info-bg: #93acbf1c;
+    --maker-nintendo: #d0675c; --maker-sony: #7896ba; --maker-sega: #5ea3c9; --maker-atari: #d98a4d;
+    --maker-snk: #c9a94d; --maker-nec: #9c998f; --maker-other: #7b7870;
+    --shadow-pop: 0 12px 28px #00000080, 0 2px 6px #00000060;
+    color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --plastic: #191918; --panel: #222221; --panel-2: #2b2b29; --seam: #393835; --key-edge: #2e2d2a;
+    --ink: #edebe4; --ink-soft: #b7b4ab; --ink-faint: #929087;
+    --accent: #ee6b2c; --accent-text: #ee6b2c; --accent-ink: #191918; --signal: #e5b33a;
+    --ok: #5fb376; --bad: #e46b57; --warn: #ddb24a; --info: #93acbf;
+    --ok-bg: #5fb37620; --bad-bg: #e46b5720; --warn-bg: #ddb24a20; --info-bg: #93acbf1c;
+    --maker-nintendo: #d0675c; --maker-sony: #7896ba; --maker-sega: #5ea3c9; --maker-atari: #d98a4d;
+    --maker-snk: #c9a94d; --maker-nec: #9c998f; --maker-other: #7b7870;
+    --shadow-pop: 0 12px 28px #00000080, 0 2px 6px #00000060;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body, #app { height: 100%; margin: 0; }
+/* The UI behaves like an app, not a document: no stray text selection. Fields and the
+   .selectable bits (game titles, paths, hashes, descriptions) still select. */
+body { -webkit-user-select: none; user-select: none; cursor: default; }
+input, textarea, .selectable, .selectable * { -webkit-user-select: text; user-select: text; cursor: auto; }
+body { background: var(--plastic); color: var(--ink); font: 400 14px/1.4 var(--font); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button, input, select, textarea { font: inherit; color: inherit; }
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-s); }
+input, textarea { caret-color: var(--accent-text); }
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.005em; }
+h1 { font-size: 22px; letter-spacing: -0.015em; } h2 { font-size: 17px; } h3 { font-size: 14.5px; }
+a { color: var(--info); text-underline-offset: 3px; }
+.muted { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Buttons are keys: a flat face, a hairline border and a slightly heavier lower edge. Only the
+   one action that does the job in an area is orange. */
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 1px solid var(--seam); border-bottom-color: var(--key-edge); border-radius: var(--radius-s); background: var(--panel); cursor: pointer; font-weight: 500; white-space: nowrap; transition: background-color .12s ease-out, border-color .12s ease-out; }
+.btn:hover { background: var(--panel-2); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); border-bottom-color: color-mix(in srgb, var(--accent) 70%, #000); color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.btn.danger { color: var(--bad); }
+.btn.danger:hover { border-color: var(--bad); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--panel-2); }
+.btn.small { height: 26px; padding: 0 9px; font-size: 13px; }
+input[type=text], input[type=search], input[type=number], input[type=password], input[type=date], select, textarea {
+  height: 30px; padding: 0 9px; border: 1px solid var(--seam); border-radius: var(--radius-s); background: var(--panel); min-width: 0;
+}
+input:hover, select:hover, textarea:hover { border-color: color-mix(in srgb, var(--ink) 22%, var(--seam)); }
+textarea { height: auto; padding: 6px 9px; line-height: 1.45; }
+input::placeholder, textarea::placeholder { color: var(--ink-faint); }
+input[type=checkbox] { accent-color: var(--accent-text); }
+
+/* Indicator lamps: a small coloured light beside a plain label, as on Braun's radios and
+   hi-fi. .chip and .gpill share it; .chip.plain is a label tag without a lamp. */
+.chip, .gpill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; color: var(--ink-soft); }
+.chip::before, .gpill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--ink-faint); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ink-faint) 18%, transparent); }
+.chip.ok::before, .gpill.ok::before { background: var(--ok); box-shadow: 0 0 0 2px var(--ok-bg); }
+.chip.bad::before, .gpill.bad::before { background: var(--bad); box-shadow: 0 0 0 2px var(--bad-bg); }
+.chip.warn::before, .gpill.warn::before { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-bg); }
+.chip.info::before, .gpill.info::before { background: var(--info); box-shadow: 0 0 0 2px var(--info-bg); }
+.gpill.accent::before { background: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent); }
+.chip.ok, .gpill.ok { color: var(--ink); }
+.chip.plain { height: 20px; padding: 0 7px; border: 1px solid var(--seam); border-radius: var(--radius-s); font-weight: 500; }
+.chip.plain::before { display: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+.page { height: 100%; overflow: auto; padding: 22px 28px 40px; }
+.page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 18px; }
+.page-head p { margin: 4px 0 0; color: var(--ink-soft); max-width: 70ch; }
+.page-head .spacer { flex: 1; }
+.empty { padding: 48px 0; text-align: center; color: var(--ink-soft); }
+.empty h2 { color: var(--ink); margin-bottom: 6px; }
+
+table.list { width: 100%; border-collapse: collapse; }
+table.list th { text-align: left; font-weight: 600; color: var(--ink-soft); font-size: 13px; padding: 6px 10px; border-bottom: 1px solid var(--seam); position: sticky; top: 0; background: var(--plastic); }
+table.list td { padding: 6px 10px; border-bottom: 1px solid color-mix(in srgb, var(--seam) 55%, transparent); vertical-align: top; }
+table.list tr:hover td { background: color-mix(in srgb, var(--panel) 60%, transparent); }
+.path { font-size: 13px; color: var(--ink-soft); word-break: break-all; }
+
+.modal-backdrop { position: fixed; inset: 0; background: color-mix(in srgb, #000 48%, transparent); display: grid; place-items: center; z-index: 50; }
+.modal { background: var(--panel); border: 1px solid var(--seam); border-radius: var(--radius-m); box-shadow: var(--shadow-pop); width: min(960px, calc(100vw - 48px)); max-height: calc(100vh - 64px); display: flex; flex-direction: column; }
+.modal header { padding: 16px 20px 10px; }
+.modal header p { margin: 4px 0 0; color: var(--ink-soft); }
+.modal .body { padding: 0 20px; overflow: auto; flex: 1; }
+.modal footer { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 14px 20px; border-top: 1px solid var(--seam); }
+.modal footer .left { margin-right: auto; color: var(--ink-soft); }
+@media (prefers-reduced-motion: no-preference) {
+  .modal { animation: pop .14s ease-out; }
+  @keyframes pop { from { transform: translateY(6px); opacity: 0; } }
+}
+
+/* ---- file cards: one card per group of files, one row per file ----
+   A row is a status pill, then the name, a muted line of facts, and an optional note. */
+.gcard { border: 1px solid var(--seam); border-radius: var(--radius-m); background: var(--panel); margin-bottom: 12px; overflow: hidden; }
+.gcard-head { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px 8px; }
+.gcard-head .grow { flex: 1; min-width: 0; }
+.gcard-head h3 { margin: 0; font-size: 16px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.gcard-head h3 .count { font-size: 13px; font-weight: 500; color: var(--ink-faint); }
+.gcard-head .sub { margin: 3px 0 0; color: var(--ink-soft); font-size: 14px; max-width: 90ch; }
+.gcard-head .actions { flex: none; display: flex; gap: 6px; align-items: center; }
+.grows { list-style: none; margin: 0; padding: 0 14px; }
+.grows > li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--seam) 60%, transparent); }
+.grows .gpill { flex: none; width: 104px; padding-top: 1px; }
+.grow-body { flex: 1; min-width: 0; }
+.grow-name { font-weight: 600; overflow-wrap: anywhere; }
+.grow-meta { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 13px; color: var(--ink-faint); margin-top: 2px; overflow-wrap: anywhere; }
+.grow-note { font-size: 13px; margin-top: 3px; color: var(--ink-soft); overflow-wrap: anywhere; }
+.grow-note.info { color: var(--info); }
+.grow-note.warn { color: var(--warn); }
+.grow-actions { flex: none; display: flex; gap: 6px; align-items: center; }
+.gcard-foot { display: flex; gap: 8px; justify-content: flex-end; align-items: center; padding: 8px 14px 10px; }
+.gcard-foot .spacer { flex: 1; }
+.more-link { border: 0; background: none; padding: 6px 0 8px; color: var(--accent-text); cursor: pointer; font-size: 13px; font-weight: 600; }
+.page-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--seam); flex-wrap: wrap; }
+.page-tabs button { border: 0; background: none; padding: 6px 12px; cursor: pointer; color: var(--ink-soft); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.page-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+.page-tabs span { color: var(--ink-faint); font-weight: 500; margin-left: 4px; }
+
+/* on your shelf: the physical-collection lamp, in the ochre of your own marks */
+.chip.shelf::before { background: var(--signal); box-shadow: 0 0 0 2px color-mix(in srgb, var(--signal) 25%, transparent); }
