@@ -5,6 +5,10 @@ const call = <R>(cmd: string, args?: Record<string, unknown>) => invoke<R>(cmd, 
 
 export const api = {
   startup: () => call<T.StartupInfo>("startup"),
+  updateCheck: () => call<T.UpdateStatus>("update_check"),
+  /** downloads and verifies the new version; resolves to its version (null: nothing newer) */
+  updateDownload: () => call<string | null>("update_download"),
+  updateInstall: () => call<void>("update_install"),
   settings: () => call<T.Settings>("get_settings"),
   settingsPath: () => call<string>("settings_path"),
   /** `base`: the settings this change started from; only what differs from it is saved. */

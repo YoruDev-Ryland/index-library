@@ -1,6 +1,6 @@
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { api } from "./api";
-import type { CollectionSummary, GameFilter, GameSort, HashState, JobEvent, JobInfo, Settings, SystemSummary } from "./types";
+import type { CollectionSummary, GameFilter, GameSort, HashState, JobEvent, JobInfo, Settings, SystemSummary , UpdateStatus } from "./types";
 import { errText } from "./format";
 
 export type View = "library" | "dashboard" | "completion" | "duplicates" | "cleanup" | "archive" | "review" | "history" | "settings" | "collection";
@@ -25,6 +25,26 @@ class AppState {
     try { localStorage.setItem("lo.view", on ? "covers" : "list"); } catch { /* storage unavailable: just this session */ }
   }
   jobsOpen = $state(false);
+  /** new versions of Index: what the last check found, and when */
+  update = $state<{ status: UpdateStatus | null; checkedAt: number | null; checking: boolean; downloading: boolean; error: string | null }>({ status: null, checkedAt: null, checking: false, downloading: false, error: null });
+  /** Look for a new version; download it when this copy can install it. Quiet: errors only show in Settings. */
+  async checkUpdate(manual = false) {
+    if (this.update.checking) return;
+    this.update.checking = true;
+    try {
+      const st = await api.updateCheck();
+      this.update.status = st;
+      this.update.error = null;
+      if (st.available && st.can_install && !st.ready) {
+        this.update.downloading = true;
+        try { const v = await api.updateDownload(); if (v && this.update.status) this.update.status = { ...this.update.status, ready: v }; }
+        catch (e) { this.update.error = errText(e); }
+        finally { this.update.downloading = false; }
+      }
+      if (manual && !st.available) this.toast(`Index ${st.current} is the latest version`);
+    } catch (e) { this.update.error = errText(e); if (manual) this.fail(e); }
+    finally { this.update.checking = false; this.update.checkedAt = Date.now(); }
+  }
   /** bumped to play the startup screen again (the mark in the title bar) */
   splashReplay = $state(0);
   systemImages = $state<Record<string, string>>({});
@@ -78,6 +98,10 @@ class AppState {
     if (!this.unlisten) this.unlisten = listen<JobEvent>("job", (ev) => this.onJob(ev.payload));
     await this.unlisten;
     await this.refresh();
+    // new versions: shortly after starting, then every 6 hours (unless turned off in Settings)
+    const auto = () => { if (this.settings?.auto_update !== false) this.checkUpdate(); };
+    setTimeout(auto, 8_000);
+    setInterval(auto, 6 * 60 * 60 * 1000);
     // other PCs' play status and collection changes arrive through the shared journal: pick
     // them up when you come back to the window (at most once a minute)
     let last = Date.now();

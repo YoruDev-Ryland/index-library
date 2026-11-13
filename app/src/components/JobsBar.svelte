@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { ask } from "@tauri-apps/plugin-dialog";
+  import { openLink } from "../lib/links";
   import Icon from "./Icon.svelte";
   import MarkAnim from "./MarkAnim.svelte";
   import { app } from "../lib/state.svelte";
@@ -64,6 +66,13 @@
     try { localStorage.setItem("lo.activityHeight", String(height)); } catch {}
   }
   function close() { app.jobsOpen = false; toggleEl?.focus(); }
+  // a new version, downloaded: install it and start again (asking first if work is under way)
+  async function restartToUpdate() {
+    const busy = app.runningJobs.length;
+    if (busy && !(await ask(`${busy === 1 ? "A job is" : `${busy} jobs are`} still running. Restarting stops ${busy === 1 ? "it" : "them"}; it can be run again after the update.`, { title: "Restart to update?", kind: "warning", okLabel: "Restart", cancelLabel: "Not now" }))) return;
+    try { await api.updateInstall(); } catch (e) { app.fail(e); }
+  }
+  const openUrl = (u: string) => openLink(u);
 </script>
 
 <!-- The panel slides up from behind the bar; the Activity tab rides its top edge, tucked into the
@@ -152,10 +161,26 @@
       <button class="btn small" onclick={togglePause}>{app.hash.paused ? "Resume" : "Pause"}</button>
     </div>
   {/if}
+  {#if app.update.status?.available}
+    {@const u = app.update.status}
+    <div class="update" role="status">
+      <span class="lamp ok"></span>
+      {#if u.ready}<span>Index {u.ready} is ready</span>
+      {:else if app.update.downloading}<span class="muted">Downloading Index {u.available?.version}…</span>
+      {:else if !u.can_install}<span>Index {u.available?.version} is out</span>
+      {:else}<span class="muted">Index {u.available?.version} is out</span>{/if}
+      <button class="link" onclick={() => openUrl(u.available!.url)}>What's new</button>
+      {#if u.ready}<button class="btn small primary" onclick={restartToUpdate}>Restart to update</button>
+      {:else if !u.can_install}<button class="btn small" onclick={() => openUrl(u.available!.url)}>Download</button>{/if}
+    </div>
+  {/if}
   <span class="tab-room" aria-hidden="true"></span>
 </footer>
 
 <style>
+  .update { display: flex; align-items: center; gap: 10px; padding: 0 12px; border-left: 1px solid var(--seam); white-space: nowrap; }
+  .update .link { border: 0; background: none; padding: 0; color: var(--ink-soft); text-decoration: underline; cursor: pointer; font: inherit; }
+  .update .link:hover { color: var(--ink); }
   /* ---- the bar ---- */
   .jobsbar { display: flex; align-items: stretch; height: 36px; border-top: 1px solid var(--seam); background: var(--panel-2); font-size: 13.5px; }
   /* hovering the bar — or the closed tab resting in it — lights the whole bar, edge to edge */

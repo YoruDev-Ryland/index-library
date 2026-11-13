@@ -50,6 +50,8 @@ pub struct Settings {
     pub sync: SyncSettings,
     /// what prices on the shelf are in (ISO code: USD, EUR, GBP…)
     pub currency: String,
+    /// look for new versions of Index on GitHub (this PC's choice; never synced)
+    pub auto_update: bool,
 }
 
 /// A library folder as sync knows it: its id on every device, where it is on this one, and
@@ -97,6 +99,7 @@ impl Default for Settings {
             theme: "system".into(),
             sync: SyncSettings::default(),
             currency: "USD".into(),
+            auto_update: true,
         }
     }
 }

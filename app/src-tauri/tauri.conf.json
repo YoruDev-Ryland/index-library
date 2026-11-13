@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Index",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "app.index-library",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -50,6 +50,15 @@
       "icons/icon.icns"
     ],
     "category": "Utility",
-    "shortDescription": "Organise a game ROM library: clean names, verification, completion, and your physical collection"
+    "shortDescription": "Organise a game ROM library: clean names, verification, completion, and your physical collection",
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU1MkQ5QTI0QTA5OTgwRTgKUldUb2dKbWdKSm90VlphanhyTk43SjJHSWxnaTkzQ3FXMDA1MnZDNGQxNGxmVC9XakhZNjVreWoK",
+      "endpoints": [
+        "https://github.com/YoruDev-Ryland/index-library/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

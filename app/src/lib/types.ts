@@ -52,7 +52,7 @@ export interface Skipped { kind: SkipKind; key: string; label: string; system_id
 export interface ScanReport { dirs_listed: number; dirs_skipped: number; files_added: number; files_removed: number; files_changed: number; errors: [string, string][]; unknown_folders: string[] }
 export type FolderMapping = { kind: "system"; system: string } | { kind: "ignored" };
 export interface ApiKeys { steamgriddb: string; igdb_client_id: string; igdb_client_secret: string; screenscraper_user: string; screenscraper_password: string; screenscraper_devid: string; screenscraper_devpassword: string; rawg: string }
-export interface Settings { library_roots: string[]; folder_overrides: Record<string, FolderMapping>; ignored: string[]; archive_hold_days: number; temp_dir: string | null; python: string; tools: Record<string, string>; keys: ApiKeys; scan_concurrency: number; region_order: string[]; hash_level: string; favorite_systems: string[]; folder_layouts: Record<string, string>; one_game_one_rom: boolean; theme: "system" | "light" | "dark"; currency: string }
+export interface Settings { library_roots: string[]; folder_overrides: Record<string, FolderMapping>; ignored: string[]; archive_hold_days: number; temp_dir: string | null; python: string; tools: Record<string, string>; keys: ApiKeys; scan_concurrency: number; region_order: string[]; hash_level: string; favorite_systems: string[]; folder_layouts: Record<string, string>; one_game_one_rom: boolean; theme: "system" | "light" | "dark"; currency: string; auto_update: boolean }
 
 export interface CompletionOptions { regions: string[]; unlicensed: boolean; aftermarket: boolean; languages: string[]; source: "digital" | "physical" | "either" }
 export type CompletionState = "have" | "unverified" | "missing";
@@ -85,3 +85,6 @@ export interface ShelfSummary { copies: number; best: string | null }
 export interface ReleaseHit { release: string; title: string; regions: string[]; source: "list" | "titledb" | "catalog" }
 export interface CsvMapping { title: number | null; console: number | null; region: number | null; edition: number | null; parts: number | null; condition: number | null; location: number | null; price: number | null; date: number | null; notes: number | null }
 export interface ImportRow { line: number; system: string | null; title: string; release: string | null; how: "exact" | "close" | "typed" | "none"; region: string | null; fields: CopyFields; duplicate: boolean }
+
+export interface UpdateAvailable { version: string; notes: string | null; url: string; via: "api" | "latest.json" }
+export interface UpdateStatus { current: string; available: UpdateAvailable | null; can_install: boolean; ready: string | null }

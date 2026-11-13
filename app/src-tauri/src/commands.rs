@@ -153,6 +153,7 @@ fn collection_file(path: &std::path::Path, read: bool) -> R<()> {
 
 pub fn handlers() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static {
     tauri::generate_handler![
+        crate::updater::update_check, crate::updater::update_download, crate::updater::update_install, crate::updater::open_release_page,
         startup, get_settings, settings_path, save_settings, completion, completion_summary, shelf_add, shelf_update, shelf_remove, shelf_locations, shelf_releases, shelf_csv_columns, shelf_csv_preview, shelf_csv_import, read_csv_file, sync_status, sync_connect, sync_restore, sync_now, sync_disconnect, systems, all_systems, games, game_ids_for, game_detail, reveal, fetch_game_art, set_play, play_summary, collections, collection, create_collection, update_collection, set_collection_items, add_to_collection, collection_preview, collection_import, collection_export, write_text_file, read_text_file, scan, last_scan,
         jobs_list, job_cancel, jobs_clear, plan_renames, apply_renames, undo, history, hash, set_hash_level, pause_hashing, hash_state,
         import_dat, verify, missing, dupes, junk, compare_contents, layout, fix_layout, archive_paths, archive_files, move_to_tools, move_file, archive_list, archive_purge, archive_purge_expired, archive_purge_all,

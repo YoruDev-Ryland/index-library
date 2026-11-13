@@ -163,3 +163,15 @@ pub fn text_of(bytes: &[u8]) -> String {
         }).collect(),
     }
 }
+
+/// Open a web page in the system's browser.
+pub fn open_url(url: &str) -> anyhow::Result<()> {
+    use std::process::Command;
+    #[cfg(target_os = "windows")]
+    { Command::new("explorer").arg(url).spawn()?; }
+    #[cfg(target_os = "macos")]
+    { Command::new("open").arg(url).spawn()?; }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    { Command::new("xdg-open").arg(url).spawn()?; }
+    Ok(())
+}

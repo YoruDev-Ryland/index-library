@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod commands;
+mod updater;
 
 use lo_core::jobs::JobEvent;
 use lo_core::library::Library;
@@ -9,6 +10,8 @@ use tauri::{Emitter, Manager};
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::Pending::default())
         .setup(|app| {
             let handle = app.handle().clone();
             let sink = Arc::new(move |e: JobEvent| { let _ = handle.emit("job", &e); });

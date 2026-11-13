@@ -29,3 +29,4 @@ pub mod sync;
 pub mod completion;
 pub mod shelf;
 pub mod shelf_csv;
+pub mod update;

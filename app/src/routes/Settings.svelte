@@ -106,7 +106,7 @@
   const SECTIONS = [
     { id: "appearance", label: "Appearance" }, { id: "library", label: "Library" }, { id: "duplicates", label: "Duplicates" },
     { id: "archive", label: "Scanning & archive" }, { id: "info", label: "Game info" }, { id: "tools", label: "Tools" },
-    { id: "verification", label: "Verification" }, { id: "images", label: "System images" }, { id: "shelf", label: "Shelf" }, { id: "sync", label: "Sync" },
+    { id: "verification", label: "Verification" }, { id: "images", label: "System images" }, { id: "shelf", label: "Shelf" }, { id: "sync", label: "Sync" }, { id: "updates", label: "Updates" },
   ];
   let current = $state("appearance");
   let scroller = $state<HTMLElement | null>(null);
@@ -320,6 +320,26 @@
       <section id="s-sync">
         <header><h2>Sync</h2><p>Optional. Connect to your own Index sync server to see and edit your library from other devices, and to restore it on a new PC. Everything works the same without one.</p></header>
         <SyncSettings />
+      </section>
+
+      <section id="s-updates">
+        <header><h2>Updates</h2><p>New versions of Index come from its GitHub releases. They download in the background, and you choose when to restart into them.</p></header>
+        <div class="set">
+          <div class="lab"><b>Version</b><span>{app.update.status ? `Index ${app.update.status.current}` : "Checking…"}{app.update.status && !app.update.status.can_install ? ". Installed by your system's package manager: new versions are offered as a download." : ""}</span></div>
+          <div class="ctl stack">
+            <div class="row"><button class="btn small" disabled={app.update.checking || app.update.downloading} onclick={() => app.checkUpdate(true)}>{app.update.checking ? "Checking…" : app.update.downloading ? "Downloading…" : "Check now"}</button></div>
+            <p class="note quiet" aria-live="polite">
+              {#if app.update.error}Couldn't check: {app.update.error}
+              {:else if app.update.status?.ready}Index {app.update.status.ready} is downloaded: restart to update, from the bar at the bottom.
+              {:else if app.update.status?.available}Index {app.update.status.available.version} is out.
+              {:else if app.update.checkedAt}Up to date, checked {new Date(app.update.checkedAt).toLocaleTimeString()}.{/if}
+            </p>
+          </div>
+        </div>
+        <div class="set">
+          <div class="lab"><b>Check automatically</b><span>When Index starts and every 6 hours. This PC only.</span></div>
+          <div class="ctl"><label class="switch"><input type="checkbox" bind:checked={s.auto_update} onchange={mark} /><span>{s.auto_update ? "On" : "Off"}</span></label></div>
+        </div>
       </section>
 
       <p class="file">Stored on this PC in <code>{path}</code>. API keys stay in this file, and go to your sync server only when one is connected.</p>
