@@ -4,6 +4,7 @@
   import { api } from "../lib/api";
   import { app } from "../lib/state.svelte";
   import { PLAY, emptyPlay, isDone, isOut, playOf } from "../lib/play";
+  import { collectionText } from "../lib/gameList";
   import type { CollectionDetail, CollectionItem, GameRow, PlayStatus } from "../lib/types";
 
   let c = $state<CollectionDetail | null>(null);
@@ -146,6 +147,11 @@
       app.toast(`Saved ${c.name}`);
     } catch (e) { app.fail(e); }
   }
+  async function copyList() {
+    if (!c) return;
+    if (!c.items.length) { app.toast("No games to copy"); return; }
+    try { await navigator.clipboard.writeText(collectionText(c, (id) => app.systemName(id))); app.toast(`Copied ${c.items.length.toLocaleString()} game${c.items.length === 1 ? "" : "s"}`); } catch (e) { app.fail(e); }
+  }
   async function copyJson() {
     if (!c) return;
     try { await navigator.clipboard.writeText(await api.collectionExport(c.id)); app.toast("Copied the collection as JSON"); } catch (e) { app.fail(e); }
@@ -182,7 +188,8 @@
       <div class="head-actions">
         <button class="btn small ghost" onclick={() => (notesOpen = !notesOpen)}>{c.notes ? "Notes" : "Add notes"}</button>
         <button class="btn small ghost" onclick={exportFile} title="Save as a .json file you can share or import elsewhere">Export…</button>
-        <button class="btn small ghost" onclick={copyJson} title="Copy the collection as JSON">Copy</button>
+        <button class="btn small ghost" onclick={copyList} title="Copy the games in play order, one per line">Copy list</button>
+        <button class="btn small ghost" onclick={copyJson} title="Copy the collection as JSON, to import elsewhere">Copy as JSON</button>
         <button class="btn small ghost" class:danger={confirmDelete} onclick={del} onblur={() => (confirmDelete = false)}>{confirmDelete ? "Click again to delete" : "Delete collection"}</button>
       </div>
     </div>

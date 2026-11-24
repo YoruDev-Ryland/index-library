@@ -5,6 +5,7 @@
   import { app } from "../lib/state.svelte";
   import type { ActionInfo, ApplicableAction } from "../lib/types";
   import { PLAY } from "../lib/play";
+  import { gamesText } from "../lib/gameList";
   import GameTable from "../components/GameTable.svelte";
   import CoverGrid from "../components/CoverGrid.svelte";
   import DetailPanel from "../components/DetailPanel.svelte";
@@ -79,6 +80,20 @@
   async function hashSel() { try { await api.hash({ kind: "Games", value: selected }); } catch (e) { app.fail(e); } }
   async function hashSystem() { try { await api.hash(app.filter.system ? { kind: "System", value: app.filter.system } : { kind: "All" }); } catch (e) { app.fail(e); } }
   async function lookupSel() { try { await api.matchMetadata(selected, true); } catch (e) { app.fail(e); } }
+  /** Copies the games in this view (all pages), or just `ids` when given, as a plain list */
+  async function copyList(ids?: number[]) {
+    try {
+      let rows = (await api.games(app.filter, "title", 0, 1_000_000_000)).rows;
+      if (ids) {
+        const want = new Set(ids);
+        rows = rows.filter((r) => want.has(r.id));
+        if (rows.length < want.size) rows = (await api.games({}, "title", 0, 1_000_000_000)).rows.filter((r) => want.has(r.id));
+      }
+      if (!rows.length) { app.toast("No games to copy"); return; }
+      await navigator.clipboard.writeText(gamesText(rows, (id) => app.systemName(id)));
+      app.toast(`Copied ${rows.length.toLocaleString()} game${rows.length === 1 ? "" : "s"}`);
+    } catch (e) { app.fail(e); }
+  }
   async function renameAll() { renameIds = await api.gameIdsFor(app.filter); }
   async function infoAll() { try { const ids = await api.gameIdsFor(app.filter); await api.matchMetadata(ids); app.toast(`Looking up ${ids.length.toLocaleString()} games — matches that need a decision go to Match review`); } catch (e) { app.fail(e); } }
   function onKey(e: KeyboardEvent) {
@@ -158,6 +173,7 @@
             <button role="menuitem" onclick={() => { scanMenu = false; infoAll(); }}><b>Get game info</b><span class="muted">Names, details and covers; unsure matches go to Match review.</span></button>
             <button role="menuitem" onclick={() => { scanMenu = false; renameAll(); }}><b>Clean up names…</b><span class="muted">Preview the new names before anything changes.</span></button>
             <button role="menuitem" onclick={() => { scanMenu = false; hashSystem(); }}><b>Fingerprint</b><span class="muted">Checksums for every file, in the background.</span></button>
+            <button role="menuitem" onclick={() => { scanMenu = false; copyList(); }}><b>Copy list</b><span class="muted">Every title, one per line, to paste anywhere.</span></button>
           </div>
         {/if}
       </div>
@@ -176,6 +192,7 @@
         <button class="btn small" onclick={() => (renameIds = selected)}>Clean up names…</button>
         <button class="btn small" onclick={hashSel}>Hash</button>
         <button class="btn small" onclick={lookupSel}>Get game info</button>
+        <button class="btn small" onclick={() => copyList(selected)} title="Copy these titles, one per line">Copy list</button>
         <div class="split pop" data-pop>
           <button class="btn small" aria-expanded={collMenu} onclick={() => (collMenu = !collMenu)}>Add to collection <Icon name="chevron" size={13} /></button>
           {#if collMenu}

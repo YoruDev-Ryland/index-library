@@ -52,6 +52,20 @@ pub struct RenameItem {
 
 const FIELDS: &[&str] = &["title", "subtitle", "regions", "langs", "rev", "version", "disc", "tags", "title_id", "serial"];
 
+/// The labels a name gets, each once: not one the title already carries ("1000 Tiny Claws
+/// (Minis)" from a title database), and not a repeat, whatever its case.
+fn labels(p: &ParsedName) -> Vec<String> {
+    let title = p.title.to_lowercase();
+    let mut out: Vec<String> = Vec::new();
+    for t in p.tags.iter().filter(|t| *t != "verified-good") {
+        let l = t.to_lowercase();
+        if title.contains(&format!("({l})")) || title.contains(&format!("[{l}]")) { continue; }
+        if out.iter().any(|o| o.to_lowercase() == l) { continue; }
+        out.push(t.clone());
+    }
+    out
+}
+
 fn field(p: &ParsedName, name: &str) -> String {
     match name {
         "title" => p.title.clone(),
@@ -60,8 +74,8 @@ fn field(p: &ParsedName, name: &str) -> String {
         "rev" => p.rev.clone().unwrap_or_default(),
         "version" => p.version.clone().unwrap_or_default(),
         "disc" => p.disc.map(|d| d.to_string()).unwrap_or_default(),
-        "tags" => p.tags.iter().filter(|t| *t != "verified-good").cloned().collect::<Vec<_>>().join(") ("),
-        "subtitle" => p.tags.iter().filter(|t| *t != "verified-good").cloned().collect::<Vec<_>>().join(" - "),
+        "tags" => labels(p).join(") ("),
+        "subtitle" => labels(p).join(" - "),
         "title_id" => p.title_id.clone().unwrap_or_default(),
         "serial" => p.serial.clone().unwrap_or_default(),
         _ => String::new(),

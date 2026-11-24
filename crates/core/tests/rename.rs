@@ -190,3 +190,36 @@ fn file_roles_for_grouping_the_preview() {
     assert_eq!(r("ps1", "Final Fantasy VII (USA) (Disc 2).chd", None), ("disc", "Disc 2".into()));
     assert_eq!(r("nes", "Tetris (World).nes", None), ("game", "Game".into()));
 }
+
+/// Official titles that carry their own label ("1000 Tiny Claws (Minis)") used to get the file's
+/// copy of that label added again, so every rename grew the name by one more "(Minis)".
+#[test]
+fn renaming_never_repeats_a_label_and_settles_after_one_pass() {
+    let f = Fixture::new();
+    f.put("Sony - PSP/1000 Tiny Claws (Minis) (Minis) (Minis).pkg", b"a");
+    f.put("Sony - PSP/2Xtreme (license).pkg", b"b");
+    f.put("Sony - PSP/Monsters (Probably) Stole My Princess (Minis) (Probably) (Minis) (Probably) (Minis).pkg", b"c");
+    f.put("Sony - PSP/Echochrome (USA) (Demo) (Demo).iso", b"d");
+    rescan(&f);
+    let set = |like: &str, title: &str| {
+        f.db.conn().execute("UPDATE games SET meta_state='matched', meta_json=?1 WHERE id=(SELECT game_id FROM files WHERE name LIKE ?2)",
+            (serde_json::json!({"source": "titledb-psp", "title": title, "score": 1.0}).to_string(), format!("{like}%"))).unwrap();
+    };
+    set("1000 Tiny", "1000 Tiny Claws (Minis)");
+    set("2Xtreme", "2Xtreme (License)");
+    set("Monsters", "Monsters (Probably) Stole My Princess (Minis)");
+    let expect = ["1000 Tiny Claws (Minis).pkg", "2Xtreme (License).pkg", "Echochrome (USA) (Demo).iso", "Monsters (Probably) Stole My Princess (Minis).pkg"];
+
+    let plan = plan_renames(&f.db, &LocalFs, &all_games(&f)).unwrap();
+    let mut dst: Vec<String> = plan.iter().map(|i| i.dst.file_name().unwrap().to_string_lossy().into_owned()).collect();
+    dst.sort();
+    assert_eq!(dst, expect);
+
+    // apply, rescan, plan again: nothing left to change
+    let items: Vec<_> = plan.into_iter().filter(|i| i.problem.is_none()).collect();
+    apply(&f.db, &LocalFs, &journal(&f), to_ops(&f.db, &LocalFs, &items).unwrap(), "rename").unwrap();
+    rescan(&f);
+    assert_eq!(names(&f, "Sony - PSP"), expect);
+    let again = plan_renames(&f.db, &LocalFs, &all_games(&f)).unwrap();
+    assert!(again.iter().all(|i| matches!(i.problem, Some(Problem::Unchanged))), "{again:?}");
+}

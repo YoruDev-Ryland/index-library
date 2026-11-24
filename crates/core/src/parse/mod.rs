@@ -102,26 +102,44 @@ pub fn norm_title(s: &str) -> String {
 static RE_SPACES: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").unwrap());
 
 /// Split "Title (a) [b] (c)" into the title and the bracket groups, tolerating unbalanced brackets.
+/// Title and labels: the run of `(…)`/`[…]` groups at the end are labels; a (round) group with
+/// words after it ("Who (Probably) Stole My Princess") is part of the title.
 fn split_groups(s: &str) -> (String, Vec<(char, String)>) {
-    let mut title = String::new();
-    let mut groups = Vec::new();
-    let mut chars = s.char_indices().peekable();
-    let mut in_title = true;
-    while let Some((i, c)) = chars.next() {
-        let close = match c { '(' => ')', '[' => ']', _ => '\0' };
-        if close != '\0' {
+    // the name as text and groups, in order: (Some(bracket), inner) or (None, text)
+    let mut parts: Vec<(Option<char>, &str)> = Vec::new();
+    let mut text_start = 0;
+    let mut i = 0;
+    while i < s.len() {
+        let c = s[i..].chars().next().unwrap();
+        let close = match c { '(' => Some(')'), '[' => Some(']'), _ => None };
+        if let Some(close) = close {
             if let Some(end) = s[i + 1..].find(close) {
                 let inner = &s[i + 1..i + 1 + end];
                 if !inner.contains(['(', '[']) {
-                    groups.push((c, inner.trim().to_string()));
-                    in_title = false;
-                    // advance past the group
-                    while let Some(&(j, _)) = chars.peek() { if j <= i + 1 + end { chars.next(); } else { break; } }
+                    if text_start < i { parts.push((None, &s[text_start..i])); }
+                    parts.push((Some(c), &s[i..i + 2 + end]));
+                    i += 2 + end;
+                    text_start = i;
                     continue;
                 }
             }
         }
-        if in_title { title.push(c); }
+        i += c.len_utf8();
+    }
+    if text_start < s.len() { parts.push((None, &s[text_start..])); }
+    // the title runs to the last piece of text with a letter or digit in it, but never past a
+    // [square] group: those are ids and release tags, and words after them are not the title
+    // ("Game [2DLC][US] NSP")
+    let end = parts.iter().position(|(b, _)| *b == Some('[')).unwrap_or(parts.len());
+    let last_text = parts[..end].iter().rposition(|(b, t)| b.is_none() && t.chars().any(|c| c.is_alphanumeric()));
+    let mut title = String::new();
+    let mut groups = Vec::new();
+    for (n, (b, t)) in parts.into_iter().enumerate() {
+        match b {
+            Some(open) if last_text.is_none_or(|l| n > l) => groups.push((open, t[1..t.len() - 1].trim().to_string())),
+            _ if last_text.is_some_and(|l| n <= l) => title.push_str(t),
+            _ => {}
+        }
     }
     (title, groups)
 }
@@ -286,6 +304,19 @@ mod tests {
         assert!(q.flags.contains(&"decrypted-suffix".to_string()));
         let r = parse(NI, "Bravely Default-decrypted");
         assert_eq!(r.title, "Bravely Default");
+    }
+    #[test] fn brackets_inside_a_title_stay_in_it() {
+        // only the run of groups at the end are labels; words after a group belong to the title
+        let p = parse(NI, "Monsters (Probably) Stole My Princess (Minis)");
+        assert_eq!((p.title.as_str(), p.tags.clone()), ("Monsters (Probably) Stole My Princess", vec!["Minis".to_string()]));
+        let p = parse(NI, "Dissidia Duodecim (012) Final Fantasy (USA)");
+        assert_eq!((p.title.as_str(), p.regions.clone()), ("Dissidia Duodecim (012) Final Fantasy", vec!["USA".to_string()]));
+        let p = parse(&[ParserKind::Switch, NoIntro], "(English) Pokémon FireRed Version - English [0100554023408000][v0]");
+        assert_eq!((p.title.as_str(), p.title_id.as_deref()), ("(English) Pokémon FireRed Version - English", Some("0100554023408000")));
+        // unchanged: groups only at the end, and words after [square] tags
+        assert_eq!(parse(NI, "Alien vs Predator (USA) (Proto)").title, "Alien vs Predator");
+        let p = parse(NI, "Game [2DLC][US] NSP");
+        assert_eq!((p.title.as_str(), p.regions.clone()), ("Game", vec!["USA".to_string()]));
     }
     #[test] fn hack_tag() {
         assert_eq!(parse(NI, "Pokemon - Gaia (FireRed Hack)").tags, vec!["FireRed Hack"]);

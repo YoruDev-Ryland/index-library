@@ -1858,7 +1858,7 @@ dependencies = [
 
 [[package]]
 name = "index-app"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "lo-core",
@@ -2232,7 +2232,7 @@ checksum = "47d9d19d1d6efa0109d2f65ff4c85cddd50bd572e5a00127ab10987290bcefae"
 
 [[package]]
 name = "lo-cli"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -2243,7 +2243,7 @@ dependencies = [
 
 [[package]]
 name = "lo-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "aes",
  "anyhow",
